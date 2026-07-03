@@ -1,53 +1,59 @@
-# 💸 Spendly — Multi-user Expense Tracker
+# 💸 Spendly — Expense Tracker
 
-A beautiful, animated, fully responsive expense tracker. **No database, no backend, no build step** — pure HTML/CSS/JS. Every user's data is a JSON document stored on their device (localStorage), exportable and importable as a `.json` file.
+A beautiful, animated, fully-responsive expense tracker. **No database, no backend, no build step** — pure HTML/CSS/JS. Each profile's data is a JSON document kept **on the device**, and **encrypted at rest** when you set a PIN.
 
 ## ✨ Features
 
-- **Multi-user profiles** — anyone opens the site, creates a profile with their name, avatar color, currency, and an optional 4-digit PIN (stored as a SHA-256 hash). Each profile gets its own isolated JSON data store.
-- **Credit & debit tracking** — amount, category (with emoji), date, payment method (UPI / cash / card / bank), and notes. Edit or delete any transaction.
-- **Filters** — live search, type toggle (all / credit / debit), category, date ranges (this month, last month, 30/90 days, this year, custom from–to), and four sort orders, with a live filtered totals summary.
-- **Analytics** — period selector (month / 3m / 6m / year / all), stat tiles (credit, debit, net, avg spend/day, savings rate), monthly credit-vs-debit grouped bar chart, category donut with legend, and a top-categories ranking — all hand-drawn SVG with tooltips.
+- **Multi-user profiles** — pick an emoji avatar + colour, a currency, and an optional 4-digit PIN. Each profile has its own isolated JSON data store.
+- **Exact amounts, always** — `18086` shows as `₹18,086`, never `18.1k`. Full grouped numbers everywhere (tiles, lists, charts, tooltips).
+- **Auto + manual theme** — “System” follows your device’s light/dark setting and switches live; or force Light/Dark from the top bar or **Settings → Appearance**.
+- **Security, on-device** (no server involved)
+  - Set a PIN → your transactions are **encrypted with AES-256-GCM** (key derived from the PIN via PBKDF2) before they’re written to storage, so they’re unreadable without it.
+  - **Fingerprint / Face ID unlock** (WebAuthn platform authenticator), usable **with _or_ without a PIN**:
+    - *With a PIN* — biometrics are a quick unlock; the PIN still works as a fallback.
+    - *Without a PIN (biometric-only)* — a random AES key is generated and wrapped behind a **non-extractable device key** (kept in IndexedDB) that only your fingerprint / Face ID can release. Data is still encrypted; there’s no PIN fallback, so keep an exported backup.
+  - All of this is local to the device — nothing is sent anywhere. Biometrics need a real origin (`https://` or `http://localhost`), so they’re disabled on `file://`.
+- **Credit & debit tracking** — amount, category (with emoji), date, method (UPI / cash / card / bank), and notes. Edit or delete anything.
+- **Confirmation popups** before every destructive action (delete transaction, clear all, delete profile, import).
+- **Filters** — live search, type toggle, category, date ranges (this month, last month, 30/90 days, this year, custom), four sort orders, and a live filtered totals summary.
+- **Analytics** — period selector, stat tiles, monthly credit-vs-debit bar chart, category donut with legend, and a top-categories ranking — all hand-drawn SVG with tooltips.
 - **Dashboard** — total balance, this-month credit/debit with % change vs last month, 30-day spending trend line, recent activity.
-- **JSON export / import** — back up your data or move it between devices (Settings → Your data).
-- **Dark & light themes**, count-up numbers, staggered list animations, spring modals, toasts, animated charts, mobile bottom nav + FAB. Respects `prefers-reduced-motion`.
+- **JSON export / import** — back up your data or move it between devices.
+- **Design** — animated gradient background, count-up numbers, staggered list & chart animations, spring modals, toasts, hover micro-interactions, mobile bottom nav + FAB. Respects `prefers-reduced-motion`.
+
+## 🔒 How data is stored (and why it’s on-device)
+
+Everything lives in your browser via `localStorage`, per profile:
+
+- `spendly_profiles_v1` — profile list (name, avatar, colour, currency, PIN hash, KDF salt).
+- `spendly_data_<profileId>` — that profile’s data. **Plaintext JSON if no PIN; an AES-256-GCM envelope `{ iv, ct }` if a PIN is set.**
+
+A transaction looks like:
+```json
+{ "id": "m3k9x2ab", "type": "debit", "amount": 18086, "category": "shopping", "date": "2026-07-03", "note": "Laptop", "method": "card" }
+```
+
+> **Why not a shared `data.json` on the server?** Vercel’s serverless filesystem is **read-only** — an app can’t persist writes to a file, and `/tmp` is wiped between requests and never shared between devices. Truly syncing “one JSON file across every device” therefore requires cloud storage (e.g. Vercel Blob/KV) + accounts, which this build intentionally avoids. Instead, data stays **private on each device** and you move it with **Export / Import JSON**. A PIN encrypts it; biometric unlock is a convenience on top.
 
 ## 🚀 Deploy to Vercel
 
-**Option A — Vercel CLI (fastest):**
+It’s a static site — no build step.
+
+**CLI**
 ```bash
 npm i -g vercel
 cd ExpenseTracker
 vercel --prod
 ```
 
-**Option B — Dashboard:** push this folder to a GitHub repo → [vercel.com/new](https://vercel.com/new) → import the repo → Framework preset: **Other** → Deploy. No build command, no output directory needed.
+**Dashboard:** push to a GitHub repo → [vercel.com/new](https://vercel.com/new) → import → Framework preset: **Other** → Deploy. No build command, no output directory.
 
-**Option C — Drag & drop:** zip the folder and drop it at [vercel.com/new](https://vercel.com/new).
-
-## 📁 How data is stored
-
-- `spendly_profiles_v1` — list of profiles (name, color, currency, PIN hash)
-- `spendly_data_<profileId>` — that user's JSON: `{ "transactions": [...] }`
-
-A transaction looks like:
-```json
-{
-  "id": "m3k9x2ab",
-  "type": "debit",
-  "amount": 450,
-  "category": "food",
-  "date": "2026-07-02",
-  "note": "Dinner with team",
-  "method": "upi"
-}
-```
-
-> **Note:** Vercel's serverless filesystem is read-only, so a shared server-side JSON file isn't possible without a database. Data therefore lives per-browser — the Export/Import JSON buttons are how you back up or move it. A PIN protects a profile from other people using the same browser, but anyone with device access could read localStorage directly — don't treat it as bank-grade security.
+`vercel.json` ships a strict Content-Security-Policy and security headers (HSTS, `nosniff`, `frame-ancestors 'none'`, no-referrer). Biometrics and Web Crypto require **HTTPS**, which Vercel provides automatically.
 
 ## 🖥️ Run locally
 
-Just open `index.html`, or serve it:
+Open `index.html` directly, or serve it:
 ```bash
 npx serve .
 ```
+> Note: fingerprint/Face-ID unlock needs a real origin (`http://localhost` or HTTPS), so it’s disabled on the `file://` protocol. PIN + encryption work everywhere.

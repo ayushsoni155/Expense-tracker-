@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#0d0d0d" />
+  <meta name="theme-color" content="#0b0d12" />
+  <meta name="color-scheme" content="light dark" />
   <meta name="description" content="Spendly — a beautiful multi-user expense tracker. Track credits & debits, filter, and analyze your money." />
   <title>Spendly — Expense Tracker</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💸</text></svg>" />
@@ -48,7 +49,16 @@
           <input type="password" id="newPin" inputmode="numeric" pattern="\d{4}" placeholder="••••" maxlength="4" />
         </div>
         <div class="field">
-          <label>Pick an avatar color</label>
+          <label>Choose an avatar</label>
+          <div class="avatar-editor">
+            <span class="avatar avatar-preview" id="avatarPreview">P</span>
+            <div class="avatar-editor-picks">
+              <div class="avatar-row" id="avatarPicker"></div>
+            </div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Avatar colour</label>
           <div class="color-row" id="colorRow"></div>
         </div>
         <div class="field">
@@ -60,6 +70,9 @@
             <option value="GBP">£ GBP — British Pound</option>
             <option value="AED">د.إ AED — UAE Dirham</option>
             <option value="JPY">¥ JPY — Japanese Yen</option>
+            <option value="CAD">$ CAD — Canadian Dollar</option>
+            <option value="AUD">$ AUD — Australian Dollar</option>
+            <option value="SGD">$ SGD — Singapore Dollar</option>
           </select>
         </div>
         <button type="submit" class="btn btn-primary btn-block">Start tracking →</button>
@@ -68,7 +81,7 @@
 
       <!-- PIN prompt -->
       <form id="pinForm" class="pin-form hidden" autocomplete="off">
-        <h2 class="auth-title">Enter PIN for <span id="pinName"></span></h2>
+        <h2 class="auth-title" id="unlockTitle">Enter PIN</h2>
         <div class="pin-inputs" id="pinInputs">
           <input type="password" inputmode="numeric" maxlength="1" class="pin-digit" />
           <input type="password" inputmode="numeric" maxlength="1" class="pin-digit" />
@@ -76,15 +89,22 @@
           <input type="password" inputmode="numeric" maxlength="1" class="pin-digit" />
         </div>
         <p class="pin-error hidden" id="pinError">Wrong PIN — try again</p>
+        <p class="unlock-hint hidden" id="unlockHint"></p>
+        <button type="button" class="btn btn-bio btn-block hidden" id="btnBio">
+          <svg viewBox="0 0 24 24" width="19" height="19"><path fill="currentColor" d="M17.81 4.47c-.08 0-.16-.02-.23-.06C15.66 3.42 14 3 12.01 3c-1.98 0-3.86.47-5.57 1.41-.24.13-.54.04-.68-.2-.13-.24-.04-.55.2-.68C7.82 2.52 9.86 2 12.01 2c2.13 0 3.99.47 6.03 1.52.25.13.34.43.21.67-.09.18-.26.28-.44.28M3.5 9.72c-.1 0-.2-.03-.29-.09-.23-.16-.28-.47-.12-.7.99-1.4 2.25-2.5 3.75-3.27C9.98 4.04 14 4.03 17.15 5.65c1.5.77 2.76 1.86 3.75 3.25.16.22.11.54-.12.7-.23.16-.54.11-.7-.12-.9-1.26-2.04-2.25-3.39-2.94-2.87-1.47-6.54-1.47-9.4.01-1.36.7-2.5 1.7-3.4 2.96-.08.14-.23.21-.39.21M9.75 21.79c-.13 0-.26-.05-.35-.15-.87-.87-1.34-1.43-2.01-2.64-.69-1.23-1.05-2.73-1.05-4.34 0-2.97 2.54-5.39 5.66-5.39s5.66 2.42 5.66 5.39c0 .28-.22.5-.5.5s-.5-.22-.5-.5c0-2.42-2.09-4.39-4.66-4.39-2.57 0-4.66 1.97-4.66 4.39 0 1.44.32 2.77.93 3.85.64 1.15 1.08 1.64 1.85 2.42.19.2.19.51 0 .71-.11.1-.24.15-.37.15M16.92 19.94c-1.19 0-2.24-.3-3.1-.89-1.49-1.01-2.38-2.65-2.38-4.39 0-.28.22-.5.5-.5s.5.22.5.5c0 1.41.72 2.74 1.94 3.56.71.48 1.54.71 2.54.71.24 0 .64-.03 1.04-.1.27-.05.53.13.58.41.05.27-.13.53-.41.58-.57.11-1.07.12-1.21.12M14.91 22c-.04 0-.09-.01-.13-.02-1.59-.44-2.63-1.03-3.72-2.1-1.4-1.39-2.17-3.24-2.17-5.22 0-1.62 1.38-2.94 3.08-2.94 1.7 0 3.08 1.32 3.08 2.94 0 1.07.93 1.94 2.08 1.94s2.08-.87 2.08-1.94c0-3.77-3.25-6.83-7.25-6.83-2.84 0-5.44 1.58-6.61 4.03-.39.81-.59 1.76-.59 2.8 0 .78.07 2.01.67 3.61.1.26-.03.55-.29.64-.26.1-.55-.04-.64-.29-.49-1.31-.73-2.61-.73-3.96 0-1.2.23-2.29.68-3.24 1.33-2.79 4.28-4.6 7.51-4.6 4.55 0 8.25 3.51 8.25 7.83 0 1.62-1.38 2.94-3.08 2.94s-3.08-1.32-3.08-2.94c0-1.07-.93-1.94-2.08-1.94s-2.08.87-2.08 1.94c0 1.71.66 3.31 1.87 4.51.95.94 1.86 1.46 3.27 1.85.27.07.42.35.35.61-.05.23-.26.38-.47.38"/></svg>
+          Unlock with fingerprint / Face ID
+        </button>
         <button type="button" class="btn btn-ghost btn-block" id="btnPinBack">← Back</button>
+        <button type="button" class="btn-link unlock-remove hidden" id="btnUnlockRemove">Can’t unlock on this device? Remove profile</button>
       </form>
     </div>
 
-    <p class="auth-footnote">Your data is stored as JSON on this device, per profile. Use <b>Settings → Export</b> to back it up or move it.</p>
+    <p class="auth-footnote">🔒 100% private — your data stays as JSON on <b>this device</b> (encrypted when you set a PIN). Use <b>Settings → Export</b> to back it up or move it to another device.</p>
   </div>
 
   <!-- ═══════════════ MAIN APP ═══════════════ -->
   <div id="app" class="app hidden">
+    <div class="app-bg" aria-hidden="true"><span class="glow glow-a"></span><span class="glow glow-b"></span></div>
 
     <!-- Sidebar (desktop) -->
     <aside class="sidebar">
@@ -137,8 +157,9 @@
           </div>
         </div>
         <div class="topbar-right">
-          <button class="icon-btn" id="btnTheme" title="Toggle theme">
-            <svg id="iconMoon" viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M12 21q-3.75 0-6.375-2.625T3 12q0-3.75 2.625-6.375T12 3q.35 0 .688.025.337.025.662.075-1.025.725-1.637 1.887Q11.1 6.15 11.1 7.5q0 2.25 1.575 3.825Q14.25 12.9 16.5 12.9q1.375 0 2.525-.613 1.15-.612 1.875-1.637.05.325.075.662Q21 11.65 21 12q0 3.75-2.625 6.375T12 21z"/></svg>
+          <button class="icon-btn" id="btnTheme" title="Theme: Auto" aria-label="Switch theme (auto / light / dark)">
+            <svg id="iconAuto" viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zm0 2v14a7 7 0 0 1 0-14z"/></svg>
+            <svg id="iconMoon" viewBox="0 0 24 24" width="20" height="20" class="hidden"><path fill="currentColor" d="M12 21q-3.75 0-6.375-2.625T3 12q0-3.75 2.625-6.375T12 3q.35 0 .688.025.337.025.662.075-1.025.725-1.637 1.887Q11.1 6.15 11.1 7.5q0 2.25 1.575 3.825Q14.25 12.9 16.5 12.9q1.375 0 2.525-.613 1.15-.612 1.875-1.637.05.325.075.662Q21 11.65 21 12q0 3.75-2.625 6.375T12 21z"/></svg>
             <svg id="iconSun" viewBox="0 0 24 24" width="20" height="20" class="hidden"><path fill="currentColor" d="M12 17q-2.075 0-3.537-1.463Q7 14.075 7 12t1.463-3.538Q9.925 7 12 7t3.538 1.462Q17 9.925 17 12q0 2.075-1.462 3.537Q14.075 17 12 17zM2 13q-.425 0-.712-.288Q1 12.425 1 12t.288-.713Q1.575 11 2 11h2q.425 0 .713.287Q5 11.575 5 12t-.287.712Q4.425 13 4 13zm18 0q-.425 0-.712-.288Q19 12.425 19 12t.288-.713Q19.575 11 20 11h2q.425 0 .712.287.288.288.288.713t-.288.712Q22.425 13 22 13zm-8-8q-.425 0-.712-.288Q11 4.425 11 4V2q0-.425.288-.713Q11.575 1 12 1t.713.287Q13 1.575 13 2v2q0 .425-.287.712Q12.425 5 12 5zm0 18q-.425 0-.712-.287Q11 22.425 11 22v-2q0-.425.288-.713Q11.575 19 12 19t.713.287Q13 19.575 13 20v2q0 .425-.287.713Q12.425 23 12 23zM5.65 7.05 4.575 6q-.3-.275-.288-.7.013-.425.288-.725.3-.3.725-.3t.7.3L7.05 5.65q.275.3.275.7 0 .4-.275.7-.275.3-.687.287-.413-.012-.713-.287zM18 19.425l-1.05-1.075q-.275-.3-.275-.712 0-.413.275-.688.275-.3.688-.287.412.012.712.287L19.425 18q.3.275.288.7-.013.425-.288.725-.3.3-.725.3t-.7-.3zM16.95 7.05q-.3-.275-.287-.688.012-.412.287-.712L18 4.575q.275-.3.7-.288.425.013.725.288.3.3.3.725t-.3.7L18.35 7.05q-.3.275-.7.275-.4 0-.7-.275zM4.575 19.425q-.3-.3-.3-.725t.3-.7l1.075-1.05q.3-.275.713-.275.412 0 .687.275.3.275.288.688-.013.412-.288.712L6 19.425q-.275.3-.7.287-.425-.012-.725-.287z"/></svg>
           </button>
           <button class="btn btn-primary desktop-only" id="btnAddTop">
@@ -249,22 +270,67 @@
           <div class="card">
             <div class="card-head"><h3>Profile</h3></div>
             <div class="field">
+              <label>Avatar</label>
+              <div class="avatar-editor">
+                <span class="avatar avatar-preview" id="setAvatarPreview">P</span>
+                <div class="avatar-editor-picks">
+                  <div class="avatar-row" id="setAvatarPicker"></div>
+                </div>
+              </div>
+              <div class="color-row" id="setColorRow" style="margin-top:12px"></div>
+            </div>
+            <div class="field">
               <label for="setName">Display name</label>
               <input type="text" id="setName" maxlength="24" />
             </div>
             <div class="field">
               <label for="setCurrency">Currency</label>
               <select id="setCurrency">
-                <option value="INR">₹ INR</option><option value="USD">$ USD</option>
-                <option value="EUR">€ EUR</option><option value="GBP">£ GBP</option>
-                <option value="AED">د.إ AED</option><option value="JPY">¥ JPY</option>
+                <option value="INR">₹ INR — Indian Rupee</option><option value="USD">$ USD — US Dollar</option>
+                <option value="EUR">€ EUR — Euro</option><option value="GBP">£ GBP — British Pound</option>
+                <option value="AED">د.إ AED — UAE Dirham</option><option value="JPY">¥ JPY — Japanese Yen</option>
+                <option value="CAD">$ CAD — Canadian Dollar</option><option value="AUD">$ AUD — Australian Dollar</option>
+                <option value="SGD">$ SGD — Singapore Dollar</option>
               </select>
             </div>
             <div class="field">
-              <label for="setPin">Change PIN <span class="label-hint">(leave blank to remove)</span></label>
-              <input type="password" id="setPin" inputmode="numeric" maxlength="4" placeholder="New 4-digit PIN" />
+              <label for="setPin">Change PIN <span class="label-hint">(leave blank to remove — a PIN encrypts your data)</span></label>
+              <input type="password" id="setPin" inputmode="numeric" pattern="\d{4}" maxlength="4" placeholder="New 4-digit PIN" />
             </div>
             <button class="btn btn-primary" id="btnSaveProfile">Save changes</button>
+          </div>
+
+          <div class="card">
+            <div class="card-head"><h3>Appearance</h3></div>
+            <div class="field" style="margin-bottom:0">
+              <label>Theme</label>
+              <div class="seg seg-wide" id="themeSeg">
+                <button class="seg-btn" data-val="auto">🖥️ System</button>
+                <button class="seg-btn" data-val="light">☀️ Light</button>
+                <button class="seg-btn" data-val="dark">🌙 Dark</button>
+              </div>
+              <p class="muted" style="margin-top:10px">“System” follows your device’s light/dark setting automatically and switches live when it changes.</p>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-head"><h3>Security</h3></div>
+            <div class="sec-row">
+              <div class="sec-icn">🔐</div>
+              <div class="sec-body">
+                <div class="sec-title">Data encryption</div>
+                <div class="sec-state" id="encState">—</div>
+              </div>
+            </div>
+            <div class="sec-row" id="bioRow">
+              <div class="sec-icn"><svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M17.81 4.47c-.08 0-.16-.02-.23-.06C15.66 3.42 14 3 12.01 3c-1.98 0-3.86.47-5.57 1.41-.24.13-.54.04-.68-.2-.13-.24-.04-.55.2-.68C7.82 2.52 9.86 2 12.01 2c2.13 0 3.99.47 6.03 1.52.25.13.34.43.21.67-.09.18-.26.28-.44.28M3.5 9.72c-.1 0-.2-.03-.29-.09-.23-.16-.28-.47-.12-.7.99-1.4 2.25-2.5 3.75-3.27C9.98 4.04 14 4.03 17.15 5.65c1.5.77 2.76 1.86 3.75 3.25.16.22.11.54-.12.7-.23.16-.54.11-.7-.12-.9-1.26-2.04-2.25-3.39-2.94-2.87-1.47-6.54-1.47-9.4.01-1.36.7-2.5 1.7-3.4 2.96-.08.14-.23.21-.39.21M9.75 21.79c-.13 0-.26-.05-.35-.15-.87-.87-1.34-1.43-2.01-2.64-.69-1.23-1.05-2.73-1.05-4.34 0-2.97 2.54-5.39 5.66-5.39s5.66 2.42 5.66 5.39c0 .28-.22.5-.5.5s-.5-.22-.5-.5c0-2.42-2.09-4.39-4.66-4.39-2.57 0-4.66 1.97-4.66 4.39 0 1.44.32 2.77.93 3.85.64 1.15 1.08 1.64 1.85 2.42.19.2.19.51 0 .71-.11.1-.24.15-.37.15M16.92 19.94c-1.19 0-2.24-.3-3.1-.89-1.49-1.01-2.38-2.65-2.38-4.39 0-.28.22-.5.5-.5s.5.22.5.5c0 1.41.72 2.74 1.94 3.56.71.48 1.54.71 2.54.71.24 0 .64-.03 1.04-.1.27-.05.53.13.58.41.05.27-.13.53-.41.58-.57.11-1.07.12-1.21.12M14.91 22c-.04 0-.09-.01-.13-.02-1.59-.44-2.63-1.03-3.72-2.1-1.4-1.39-2.17-3.24-2.17-5.22 0-1.62 1.38-2.94 3.08-2.94 1.7 0 3.08 1.32 3.08 2.94 0 1.07.93 1.94 2.08 1.94s2.08-.87 2.08-1.94c0-3.77-3.25-6.83-7.25-6.83-2.84 0-5.44 1.58-6.61 4.03-.39.81-.59 1.76-.59 2.8 0 .78.07 2.01.67 3.61.1.26-.03.55-.29.64-.26.1-.55-.04-.64-.29-.49-1.31-.73-2.61-.73-3.96 0-1.2.23-2.29.68-3.24 1.33-2.79 4.28-4.6 7.51-4.6 4.55 0 8.25 3.51 8.25 7.83 0 1.62-1.38 2.94-3.08 2.94s-3.08-1.32-3.08-2.94c0-1.07-.93-1.94-2.08-1.94s-2.08.87-2.08 1.94c0 1.71.66 3.31 1.87 4.51.95.94 1.86 1.46 3.27 1.85.27.07.42.35.35.61-.05.23-.26.38-.47.38"/></svg></div>
+              <div class="sec-body">
+                <div class="sec-title">Biometric unlock</div>
+                <div class="sec-state" id="bioState">—</div>
+              </div>
+              <button class="btn btn-primary btn-sm" id="btnToggleBio">Enable</button>
+            </div>
+            <p class="muted">Everything stays on this device. With a PIN set, your transactions are encrypted (AES-256) before they’re saved, so they’re unreadable without it.</p>
           </div>
 
           <div class="card">
@@ -376,6 +442,7 @@
   <!-- ═══════════════ CONFIRM MODAL ═══════════════ -->
   <div id="confirmModal" class="modal-overlay hidden">
     <div class="modal modal-sm">
+      <div class="confirm-emoji" id="confirmEmoji">⚠️</div>
       <h3 id="confirmTitle">Are you sure?</h3>
       <p class="muted" id="confirmText"></p>
       <div class="btn-row end">
